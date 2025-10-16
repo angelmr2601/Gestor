@@ -5,6 +5,10 @@ import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 
+console.log("✅ NEXTAUTH_SECRET loaded:", !!process.env.NEXTAUTH_SECRET);
+console.log("✅ DATABASE_URL loaded:", !!process.env.DATABASE_URL);
+console.log("✅ NEXTAUTH_URL loaded:", process.env.NEXTAUTH_URL);
+
 export const authOptions = {
   adapter: PrismaAdapter(prisma),
   session: {
