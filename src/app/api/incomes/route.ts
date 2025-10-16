@@ -80,3 +80,35 @@ export async function POST(req: Request) {
     );
   }
 }
+// 📌 DELETE: Eliminar un ingreso por ID
+export async function DELETE(req: Request) {
+  try {
+    const session = await getServerSession(authOptions);
+
+    if (!session?.user?.email) {
+      return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+    }
+
+    const { id } = await req.json();
+
+    if (!id) {
+      return NextResponse.json({ error: "ID requerido" }, { status: 400 });
+    }
+
+    // Opcional: Verifica que el ingreso pertenezca al usuario
+    const income = await prisma.income.findUnique({ where: { id } });
+    if (!income || income.userId !== session.user.id) {
+      return NextResponse.json({ error: "No autorizado" }, { status: 403 });
+    }
+
+    await prisma.income.delete({ where: { id } });
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error("Error al eliminar ingreso:", error);
+    return NextResponse.json(
+      { error: "Error interno del servidor" },
+      { status: 500 }
+    );
+  }
+}

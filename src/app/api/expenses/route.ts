@@ -80,3 +80,36 @@ export async function POST(req: Request) {
     );
   }
 }
+
+// 📌 DELETE: Eliminar un gasto por ID
+export async function DELETE(req: Request) {
+  try {
+    const session = await getServerSession(authOptions);
+
+    if (!session?.user?.email) {
+      return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+    }
+
+    const { id } = await req.json();
+
+    if (!id) {
+      return NextResponse.json({ error: "ID requerido" }, { status: 400 });
+    }
+
+    // Opcional: Verifica que el gasto pertenezca al usuario
+    const expense = await prisma.expense.findUnique({ where: { id } });
+    if (!expense || expense.userId !== session.user.id) {
+      return NextResponse.json({ error: "No autorizado" }, { status: 403 });
+    }
+
+    await prisma.expense.delete({ where: { id } });
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error("Error al eliminar gasto:", error);
+    return NextResponse.json(
+      { error: "Error interno del servidor" },
+      { status: 500 }
+    );
+  }
+}

@@ -182,39 +182,50 @@ export function Dashboard() {
         setRecurringExpenses(prev => [newRecurringExpense, ...prev]);
         toast({ title: "Gasto recurrente añadido", description: `${formatCurrency(data.amount)} cada día ${data.recurrenceDay}.` });
       } else {
-            const res = await fetch("/api/expenses", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    title: data.notes || "Gasto",
-                    amount: data.amount,
-                    category: data.category,
-                }),
-            });
+        const res = await fetch("/api/expenses", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            title: data.notes || "Gasto",
+            amount: data.amount,
+            category: data.category,
+          }),
+        });
 
-            if (!res.ok) throw new Error("Error al añadir gasto");
+        if (!res.ok) throw new Error("Error al añadir gasto");
 
-            const newExpenseFromApi: Transaction = await res.json();
-            
-            // 🔑 CORRECCIÓN CLAVE: Convertir la fecha de string a Date
-            const newExpense: Transaction = {
-                ...newExpenseFromApi,
-                date: new Date(newExpenseFromApi.date),
-            };
+        const newExpenseFromApi: Transaction = await res.json();
 
-            // Ahora newExpense.date es un objeto Date válido y .getTime() funcionará.
-            setExpenses(prev => [newExpense, ...prev].sort((a, b) => b.date.getTime() - a.date.getTime()));
-            toast({ title: "Gasto añadido", description: `${formatCurrency(data.amount)} en ${data.category}.` });
-        }
+        // 🔑 CORRECCIÓN CLAVE: Convertir la fecha de string a Date
+        const newExpense: Transaction = {
+          ...newExpenseFromApi,
+          date: new Date(newExpenseFromApi.date),
+        };
+
+        // Ahora newExpense.date es un objeto Date válido y .getTime() funcionará.
+        setExpenses(prev => [newExpense, ...prev].sort((a, b) => b.date.getTime() - a.date.getTime()));
+        toast({ title: "Gasto añadido", description: `${formatCurrency(data.amount)} en ${data.category}.` });
+      }
     } catch (error) {
       console.error(error);
       toast({ variant: "destructive", title: "Error al añadir gasto" });
     }
   };
 
-  const handleDeleteIncome = (id: string) => {
-    setIncomes(prev => prev.filter(t => t.id !== id));
-    toast({ title: "Ingreso eliminado" });
+  const handleDeleteIncome = async (id: string) => {
+    try {
+      const res = await fetch("/api/incomes", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id }),
+      });
+      if (!res.ok) throw new Error("Error al eliminar ingreso");
+      setIncomes(prev => prev.filter(t => t.id !== id));
+      toast({ title: "Ingreso eliminado" });
+    } catch (error) {
+      console.error(error);
+      toast({ variant: "destructive", title: "Error al eliminar ingreso" });
+    }
   };
 
   const handleDeleteRecurringIncome = (id: string) => {
@@ -222,9 +233,20 @@ export function Dashboard() {
     toast({ title: "Ingreso recurrente eliminado" });
   };
 
-  const handleDeleteExpense = (id: string) => {
-    setExpenses(prev => prev.filter(t => t.id !== id));
-    toast({ title: "Gasto eliminado" });
+  const handleDeleteExpense = async (id: string) => {
+    try {
+      const res = await fetch("/api/expenses", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id }),
+      });
+      if (!res.ok) throw new Error("Error al eliminar gasto");
+      setExpenses(prev => prev.filter(t => t.id !== id));
+      toast({ title: "Gasto eliminado" });
+    } catch (error) {
+      console.error(error);
+      toast({ variant: "destructive", title: "Error al eliminar gasto" });
+    }
   };
 
   const handleDeleteRecurringExpense = (id: string) => {
