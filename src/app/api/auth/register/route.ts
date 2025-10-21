@@ -1,4 +1,3 @@
-// app/api/auth/register/route.ts
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
@@ -25,11 +24,15 @@ export async function POST(request: Request) {
         email,
         hashedPassword: hashed,
       },
+      select: { id: true, email: true }, // evitar devolver BigInt/otros campos no serializables
     });
 
-    return NextResponse.json({ id: user.id, email: user.email }, { status: 201 });
-  } catch (err) {
-    console.error("REGISTER_ERR", err);
+    return NextResponse.json({ id: String(user.id), email: user.email }, { status: 201 });
+  } catch (err: any) {
+    console.error("REGISTER_ERR", err, err?.stack);
+    if (err?.code === "P2002") {
+      return NextResponse.json({ error: "Email already in use" }, { status: 409 });
+    }
     return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
 }
